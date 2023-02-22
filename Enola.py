@@ -5,11 +5,9 @@ import os.path
 import pickle
 import sys
 from datetime import date
-
-import pyttsx3
 import pyttsx3 as tts
 import speech_recognition
-import speech_recognition as sr
+from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from neuralintents import GenericAssistant
@@ -105,27 +103,18 @@ def show_todo():
 # If modifying these scopes, delete the file token.pickle .
 # if you run this for the firs
 # t time it will take you to gmail to choose your account
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
-def speak(text):
-    engine = pyttsx3.init()
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[1].id)
-    rate = engine.getProperty('rate')
-
-    engine.setProperty('rate', rate - 20)
-
-    engine.say(text)
-    engine.runAndWait()
 
 
-speak("Welcome to mail service")
+
+
+tts.speak("Welcome to mail service")
 
 
 def get_audio():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
+    r = speech_recognition.Recognizer()
+    with speech_recognition.Microphone() as source:
         r.pause_threshold = 1
         r.adjust_for_ambient_noise(source, duration=1)
         audio = r.listen(source)
@@ -136,7 +125,7 @@ def get_audio():
         print(said)
 
     except:
-        speak("Didn't get that")
+        tts.speak("Didn't get that")
 
     return said.lower()
 
@@ -163,7 +152,7 @@ def authenticate_gmail():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                'C:\\Users\chiranjeevi\Documents\GitHub\Alone\credentials.json', scopes=['https://www.googleapis.com/auth/drive.metadata.readonly'])
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for the next run
@@ -192,15 +181,15 @@ def check_mails(service):
 
         # if no new emails
         print('No messages found.')
-        speak('No messages found.')
+        tts.speak('No messages found.')
     else:
         m = ""
 
         # if email found
-        speak("{} new emails found".format(len(messages)))
+        tts.speak("{} new emails found".format(len(messages)))
 
-        speak("if you want to read any particular email just type read ")
-        speak("and for not reading type leave ")
+        tts.speak("if you want to read any particular email just type read ")
+        tts.speak("and for not reading type leave ")
         for message in messages:
 
             msg = service.users().messages().get(userId='me',
@@ -213,7 +202,7 @@ def check_mails(service):
                     a = str(add['value'].split("<")[0])
                     print(a)
 
-                    speak("email from" + a)
+                    tts.speak("email from" + a)
                     text = input()
 
                     if text == "read":
@@ -221,10 +210,10 @@ def check_mails(service):
                         print(msg['snippet'])
 
                         # speak up the mail
-                        speak(msg['snippet'])
+                        tts.speak(msg['snippet'])
 
                     else:
-                        speak("email passed")
+                        tts.speak("email passed")
 
 
 SERVICE2 = authenticate_gmail()
@@ -250,7 +239,7 @@ mappings = {
     "exit": quit
 }
 
-assistant = GenericAssistant('intents.json', intent_methods=mappings)
+assistant = GenericAssistant('credentials.json')
 assistant.train_model()
 
 assistant.save_model()
